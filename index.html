@@ -6,19 +6,26 @@
     <title>AI Ready Schools - Self-Evaluation Toolkit</title>
     <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React and ReactDOM -->
-    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- React and ReactDOM - Specific versions for stability -->
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
     <!-- Babel for JSX transpilation in the browser -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+        body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0;
+            padding: 0;
+        }
         .high-contrast { background-color: #000 !important; color: #fff !important; }
         .high-contrast .bg-white { background-color: #111 !important; border-color: #444 !important; }
-        .high-contrast .text-slate-900, .high-contrast .text-slate-700 { color: #fff !important; }
-        .high-contrast border { border-color: #fff !important; }
-        @media print { .no-print { display: none; } }
+        .high-contrast .bg-slate-50 { background-color: #000 !important; }
+        .high-contrast .text-slate-900, .high-contrast .text-slate-700, .high-contrast .text-slate-600 { color: #fff !important; }
+        .high-contrast .border-slate-200, .high-contrast .border-slate-300 { border-color: #fff !important; }
+        .high-contrast .bg-indigo-50 { background-color: #1a1a1a !important; border-color: #fff !important; }
+        .high-contrast .text-indigo-600 { color: #38bdf8 !important; }
+        @media print { .no-print { display: none !important; } }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
@@ -42,7 +49,7 @@
             };
             return (
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                    {icons[name]}
+                    {icons[name] || <circle cx="12" cy="12" r="10" />}
                 </svg>
             );
         };
@@ -175,7 +182,7 @@
 
             const downloadReport = () => {
                 const timestamp = new Date().toLocaleDateString();
-                let content = `AI READINESS EVALUATION REPORT - ${schoolInfo.name}\n`;
+                let content = `AI READINESS EVALUATION REPORT - ${schoolInfo.name || 'Untitled'}\n`;
                 content += `==========================================\n\n`;
                 content += `Overall Score: ${scoreData}/10 (${status.label})\n\n`;
                 DOMAINS.forEach(d => {
@@ -186,7 +193,7 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `AI_Readiness_${schoolInfo.name || 'Report'}.txt`;
+                a.download = `AI_Readiness_${(schoolInfo.name || 'Report').replace(/\s+/g, '_')}.txt`;
                 a.click();
             };
 
@@ -204,13 +211,15 @@
                     <div className="max-w-4xl mx-auto">
                         <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b pb-6 border-slate-200">
                             <div className="flex items-center gap-3">
-                                <div className="bg-indigo-600 p-2 rounded-lg text-white"><Icon name="layout" /></div>
+                                <div className="bg-indigo-600 p-2 rounded-lg text-white">
+                                    <Icon name="layout" />
+                                </div>
                                 <div>
                                     <h1 className="text-2xl font-bold">AI Ready Schools</h1>
                                     <p className="text-sm opacity-70">Self-Evaluation Toolkit</p>
                                 </div>
                             </div>
-                            <button onClick={() => setHighContrast(!highContrast)} className="mt-4 md:mt-0 flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 text-sm">
+                            <button onClick={() => setHighContrast(!highContrast)} className="mt-4 md:mt-0 flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 text-sm hover:bg-white transition-colors">
                                 <Icon name="settings" className="w-4 h-4" /> Toggle Contrast
                             </button>
                         </header>
@@ -220,10 +229,16 @@
                                 <h2 className="text-3xl font-bold mb-4">Evaluate your school.</h2>
                                 <p className="text-lg opacity-80 mb-8">This tool is designed for SLTs to measure AI preparedness based on national frameworks.</p>
                                 <div className="grid md:grid-cols-2 gap-6 mb-8">
-                                    <input type="text" placeholder="School Name" className="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={schoolInfo.name} onChange={e => setSchoolInfo({...schoolInfo, name: e.target.value})} />
-                                    <input type="text" placeholder="Local Authority" className="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={schoolInfo.la} onChange={e => setSchoolInfo({...schoolInfo, la: e.target.value})} />
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-sm font-bold">School Name</label>
+                                        <input type="text" placeholder="e.g. West Primary" className="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={schoolInfo.name} onChange={e => setSchoolInfo({...schoolInfo, name: e.target.value})} />
+                                    </div>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-sm font-bold">Local Authority</label>
+                                        <input type="text" placeholder="e.g. Falkirk" className="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={schoolInfo.la} onChange={e => setSchoolInfo({...schoolInfo, la: e.target.value})} />
+                                    </div>
                                 </div>
-                                <button onClick={() => setView('evaluate')} className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg">Start Audit</button>
+                                <button onClick={() => setView('evaluate')} className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-indigo-700 transition-all">Start Audit</button>
                             </div>
                         )}
 
@@ -235,16 +250,24 @@
                                         <h2 className="text-xl font-bold">{currentDomain.title}</h2>
                                     </div>
                                     <div className="p-6 md:p-10 space-y-8">
-                                        <p className="text-sm italic opacity-70">{currentDomain.description}</p>
+                                        <p className="text-sm italic opacity-70 leading-relaxed">{currentDomain.description}</p>
                                         {currentDomain.questions.map(q => (
-                                            <div key={q.id} className="space-y-3">
-                                                <p className="font-semibold">{q.text}</p>
-                                                {q.options.map(opt => (
-                                                    <button key={opt.label} onClick={() => setAnswers({...answers, [q.id]: opt.value})} className={`w-full text-left p-4 rounded-xl border transition-all flex justify-between items-center ${answers[q.id] === opt.value ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'border-slate-200 hover:border-indigo-300'}`}>
-                                                        {opt.label}
-                                                        {answers[q.id] === opt.value && <Icon name="check" className="text-indigo-600 w-5 h-5" />}
-                                                    </button>
-                                                ))}
+                                            <div key={q.id} className="space-y-4">
+                                                <p className="font-semibold text-lg leading-tight">{q.text}</p>
+                                                <div className="grid grid-cols-1 gap-3">
+                                                    {q.options.map(opt => (
+                                                        <button 
+                                                            key={opt.label} 
+                                                            onClick={() => setAnswers({...answers, [q.id]: opt.value})} 
+                                                            className={`w-full text-left p-4 rounded-xl border transition-all flex justify-between items-center group ${answers[q.id] === opt.value ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'}`}
+                                                        >
+                                                            <span className="flex-1">{opt.label}</span>
+                                                            <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-colors ${answers[q.id] === opt.value ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 group-hover:border-indigo-400'}`}>
+                                                                {answers[q.id] === opt.value && <Icon name="check" className="text-white w-4 h-4" />}
+                                                            </div>
+                                                        </button>
+                                                    ))}
+                                                </div>
                                             </div>
                                         ))}
                                         <div className="pt-6 border-t border-slate-100">
@@ -253,8 +276,10 @@
                                         </div>
                                     </div>
                                     <div className="p-6 bg-slate-50 border-t flex justify-between">
-                                        <button onClick={() => currentDomainIdx === 0 ? setView('intro') : setCurrentDomainIdx(currentDomainIdx - 1)} className="font-bold text-slate-600">Back</button>
-                                        <button onClick={() => currentDomainIdx === DOMAINS.length - 1 ? setView('results') : setCurrentDomainIdx(currentDomainIdx + 1)} className="bg-indigo-600 text-white px-8 py-2 rounded-lg font-bold">Next</button>
+                                        <button onClick={() => currentDomainIdx === 0 ? setView('intro') : setCurrentDomainIdx(currentDomainIdx - 1)} className="font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-lg transition-colors">Back</button>
+                                        <button onClick={() => currentDomainIdx === DOMAINS.length - 1 ? setView('results') : setCurrentDomainIdx(currentDomainIdx + 1)} className="bg-indigo-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-md">
+                                            {currentDomainIdx === DOMAINS.length - 1 ? 'Finish' : 'Next'}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -270,17 +295,31 @@
                                     </div>
                                     <div className={`inline-block px-6 py-2 rounded-full font-bold text-lg mb-8 ${status.bg} ${status.color}`}>{status.label}</div>
                                     <div className="flex flex-wrap gap-4 justify-center">
-                                        <button onClick={downloadReport} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2"><Icon name="download" className="w-5 h-5" /> Download Report</button>
-                                        <button onClick={() => window.print()} className="bg-white border border-slate-300 px-6 py-3 rounded-xl font-bold">Print</button>
+                                        <button onClick={downloadReport} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-black transition-all">
+                                            <Icon name="download" className="w-5 h-5" /> Download Report
+                                        </button>
+                                        <button onClick={() => window.print()} className="bg-white border border-slate-300 px-6 py-3 rounded-xl font-bold hover:bg-slate-50 transition-all">
+                                            Print
+                                        </button>
+                                        <button onClick={() => { if(confirm("Restart evaluation?")) setView('intro'); }} className="px-6 py-3 font-bold text-indigo-600 hover:underline">
+                                            Restart Audit
+                                        </button>
                                     </div>
                                 </div>
 
                                 <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
-                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Icon name="mail" className="text-indigo-600" /> Need Further Support?</h3>
+                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                        <Icon name="mail" className="text-indigo-600" /> Need Further Support?
+                                    </h3>
                                     <p className="opacity-70 mb-6 text-sm">Contact the Glow Engagement Team to discuss your results and implementation plans.</p>
                                     <form onSubmit={handleEmail} className="space-y-4">
-                                        <textarea className="w-full p-4 border rounded-xl outline-none" placeholder="Your query..." value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})} required />
-                                        <button type="submit" className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold">Email Education Scotland</button>
+                                        <div className="flex flex-col gap-1">
+                                            <label className="text-xs font-bold uppercase opacity-50">Message</label>
+                                            <textarea className="w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 h-32" placeholder="Tell us more about your specific needs..." value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})} required />
+                                        </div>
+                                        <button type="submit" className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg">
+                                            Email Education Scotland
+                                        </button>
                                     </form>
                                 </div>
                             </div>
@@ -290,8 +329,14 @@
             );
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
-        root.render(<App />);
+        // Standard React 18 initialization with safety check
+        window.onload = () => {
+            const container = document.getElementById('root');
+            if (container) {
+                const root = ReactDOM.createRoot(container);
+                root.render(<App />);
+            }
+        };
     </script>
 </body>
 </html>
