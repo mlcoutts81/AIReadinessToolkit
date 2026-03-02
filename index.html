@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Ready Schools - Self-Evaluation Toolkit</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React and ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- Babel for JSX transpilation in the browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .high-contrast { background-color: #000 !important; color: #fff !important; }
+        .high-contrast .bg-white { background-color: #111 !important; border-color: #444 !important; }
+        .high-contrast .text-slate-900, .high-contrast .text-slate-700 { color: #fff !important; }
+        .high-contrast border { border-color: #fff !important; }
+        @media print { .no-print { display: none; } }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useMemo, useEffect } = React;
+
+        // Custom Icon Components (Inline SVGs for maximum portability)
+        const Icon = ({ name, className = "w-6 h-6" }) => {
+            const icons = {
+                users: <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8m13 10v-2a4 4 0 0 0-3-3.87M17 7a4 4 0 1 1-4.24 3" />,
+                shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
+                book: <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5V4.5z" />,
+                globe: <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />,
+                layout: <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/>,
+                check: <polyline points="20 6 9 17 4 12" />,
+                mail: <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><rect width="20" height="16" x="2" y="4" rx="2"/>,
+                download: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>,
+                settings: <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>
+            };
+            return (
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                    {icons[name]}
+                </svg>
+            );
+        };
+
+        const DOMAINS = [
+            {
+                id: 'leadership',
+                title: 'AI Awareness for Educators',
+                icon: 'users',
+                description: "Identify current and future work developing staff awareness. This includes LA guidance, SQA positions, and purposeful task-first implementation.",
+                questions: [
+                    {
+                        id: 'q1',
+                        text: 'How established is staff awareness regarding LA guidance and SQA positions on AI?',
+                        options: [
+                            { label: 'Not yet shared with staff', value: 1 },
+                            { label: 'Basic awareness sessions delivered', value: 4 },
+                            { label: 'Actively shared via in-service days and professional enquiries', value: 7 },
+                            { label: 'Embedded in school culture with shared practice in resource creation and admin', value: 10 }
+                        ]
+                    },
+                    {
+                        id: 'q2',
+                        text: 'Is the use of AI tools purposeful (identifying the task/challenge before the tool)?',
+                        options: [
+                            { label: 'Tools often used "just because"', value: 2 },
+                            { label: 'Emerging focus on identifying specific challenges first', value: 5 },
+                            { label: 'Consistent focus on purposeful use to support learning and admin', value: 10 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'students',
+                title: 'AI Ethics & Risks for Students',
+                icon: 'shield',
+                description: "Work developing ethics, bias, and risk awareness, including responsible use and misinformation education.",
+                questions: [
+                    {
+                        id: 'q3',
+                        text: 'To what extent is Al ethics, bias, and misinformation integrated into the curriculum?',
+                        options: [
+                            { label: 'Not covered', value: 1 },
+                            { label: 'Taught in specific ICT/Computing lessons only', value: 4 },
+                            { label: 'Broad inclusion of responsible use and societal impact', value: 8 },
+                            { label: 'Core part of Information Literacy across all levels', value: 10 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'pedagogy',
+                title: 'Hands-on Learning',
+                icon: 'book',
+                description: "Student use of tools (e.g. Adobe Express) and clear categorization of Al permissibility in assessments.",
+                questions: [
+                    {
+                        id: 'q4',
+                        text: 'How clear is the school regarding AI permissibility levels?',
+                        options: [
+                            { label: 'No clear policy shared with students', value: 1 },
+                            { label: 'Policies exist but are inconsistent', value: 4 },
+                            { label: 'Clear communication on permissibility for all tasks', value: 8 },
+                            { label: 'Students critically select Al tools based on ethical tiers', value: 10 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'community',
+                title: 'Parental Engagement',
+                icon: 'globe',
+                description: "Workshops, newsletters, and partnerships to increase awareness among families.",
+                questions: [
+                    {
+                        id: 'q6',
+                        text: 'How do you communicate the school\'s Al position and support for parents?',
+                        options: [
+                            { label: 'No communication yet', value: 1 },
+                            { label: 'Resources provided occasionally', value: 5 },
+                            { label: 'Regular workshops and consultation', value: 10 }
+                        ]
+                    }
+                ]
+            },
+            {
+                id: 'strategy',
+                title: 'AI in Digital Strategy',
+                icon: 'layout',
+                description: "Embedding Al in learning policies, considering data privacy, and ethical frameworks.",
+                questions: [
+                    {
+                        id: 'q7',
+                        text: 'Is AI literacy explicitly defined within the Digital Strategy?',
+                        options: [
+                            { label: 'Not mentioned', value: 1 },
+                            { label: 'Technical skill only', value: 4 },
+                            { label: 'Strategy includes ethics, privacy, and inclusivity', value: 8 },
+                            { label: 'Aligned with national ethical frameworks', value: 10 }
+                        ]
+                    }
+                ]
+            }
+        ];
+
+        const App = () => {
+            const [view, setView] = useState('intro');
+            const [currentDomainIdx, setCurrentDomainIdx] = useState(0);
+            const [answers, setAnswers] = useState({});
+            const [actionPlans, setActionPlans] = useState({});
+            const [schoolInfo, setSchoolInfo] = useState({ name: '', la: '', tools: [] });
+            const [highContrast, setHighContrast] = useState(false);
+            const [contactForm, setContactForm] = useState({ subject: 'AI Implementation Support', message: '' });
+
+            const scoreData = useMemo(() => {
+                const values = Object.values(answers);
+                if (values.length === 0) return 0;
+                const total = values.reduce((acc, val) => acc + val, 0);
+                return Math.round((total / values.length) * 10) / 10;
+            }, [answers]);
+
+            const getStatus = (score) => {
+                if (score < 3) return { label: 'Emerging', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-500' };
+                if (score < 6) return { label: 'Developing', color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-500' };
+                if (score < 9) return { label: 'Proficient', color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-500' };
+                return { label: 'Confident', color: 'text-green-500', bg: 'bg-green-50', border: 'border-green-500' };
+            };
+
+            const status = getStatus(scoreData);
+
+            const downloadReport = () => {
+                const timestamp = new Date().toLocaleDateString();
+                let content = `AI READINESS EVALUATION REPORT - ${schoolInfo.name}\n`;
+                content += `==========================================\n\n`;
+                content += `Overall Score: ${scoreData}/10 (${status.label})\n\n`;
+                DOMAINS.forEach(d => {
+                    content += `${d.title.toUpperCase()}\n`;
+                    content += `Action Plan: ${actionPlans[d.id] || 'None listed.'}\n\n`;
+                });
+                const blob = new Blob([content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `AI_Readiness_${schoolInfo.name || 'Report'}.txt`;
+                a.click();
+            };
+
+            const handleEmail = (e) => {
+                e.preventDefault();
+                const recipient = "glow.engagement@educationscotland.gov.scot";
+                const body = `School: ${schoolInfo.name}\nReadiness: ${scoreData}/10\n\nMessage: ${contactForm.message}`;
+                window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(contactForm.subject)}&body=${encodeURIComponent(body)}`;
+            };
+
+            const currentDomain = DOMAINS[currentDomainIdx];
+
+            return (
+                <div className={`min-h-screen p-4 md:p-8 transition-colors ${highContrast ? 'high-contrast' : ''}`}>
+                    <div className="max-w-4xl mx-auto">
+                        <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b pb-6 border-slate-200">
+                            <div className="flex items-center gap-3">
+                                <div className="bg-indigo-600 p-2 rounded-lg text-white"><Icon name="layout" /></div>
+                                <div>
+                                    <h1 className="text-2xl font-bold">AI Ready Schools</h1>
+                                    <p className="text-sm opacity-70">Self-Evaluation Toolkit</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setHighContrast(!highContrast)} className="mt-4 md:mt-0 flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 text-sm">
+                                <Icon name="settings" className="w-4 h-4" /> Toggle Contrast
+                            </button>
+                        </header>
+
+                        {view === 'intro' && (
+                            <div className="bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-slate-200">
+                                <h2 className="text-3xl font-bold mb-4">Evaluate your school.</h2>
+                                <p className="text-lg opacity-80 mb-8">This tool is designed for SLTs to measure AI preparedness based on national frameworks.</p>
+                                <div className="grid md:grid-cols-2 gap-6 mb-8">
+                                    <input type="text" placeholder="School Name" className="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={schoolInfo.name} onChange={e => setSchoolInfo({...schoolInfo, name: e.target.value})} />
+                                    <input type="text" placeholder="Local Authority" className="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={schoolInfo.la} onChange={e => setSchoolInfo({...schoolInfo, la: e.target.value})} />
+                                </div>
+                                <button onClick={() => setView('evaluate')} className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg">Start Audit</button>
+                            </div>
+                        )}
+
+                        {view === 'evaluate' && (
+                            <div className="space-y-6">
+                                <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                                    <div className="bg-indigo-50 p-6 border-b border-indigo-100 flex items-center gap-3">
+                                        <Icon name={currentDomain.icon} className="text-indigo-600" />
+                                        <h2 className="text-xl font-bold">{currentDomain.title}</h2>
+                                    </div>
+                                    <div className="p-6 md:p-10 space-y-8">
+                                        <p className="text-sm italic opacity-70">{currentDomain.description}</p>
+                                        {currentDomain.questions.map(q => (
+                                            <div key={q.id} className="space-y-3">
+                                                <p className="font-semibold">{q.text}</p>
+                                                {q.options.map(opt => (
+                                                    <button key={opt.label} onClick={() => setAnswers({...answers, [q.id]: opt.value})} className={`w-full text-left p-4 rounded-xl border transition-all flex justify-between items-center ${answers[q.id] === opt.value ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'border-slate-200 hover:border-indigo-300'}`}>
+                                                        {opt.label}
+                                                        {answers[q.id] === opt.value && <Icon name="check" className="text-indigo-600 w-5 h-5" />}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        ))}
+                                        <div className="pt-6 border-t border-slate-100">
+                                            <p className="font-bold mb-2">Current & Planned Activities</p>
+                                            <textarea className="w-full p-4 border rounded-xl resize-none h-32 outline-none focus:ring-2 focus:ring-indigo-500" value={actionPlans[currentDomain.id] || ''} onChange={e => setActionPlans({...actionPlans, [currentDomain.id]: e.target.value})} placeholder="What is your school currently doing or planning in this area?" />
+                                        </div>
+                                    </div>
+                                    <div className="p-6 bg-slate-50 border-t flex justify-between">
+                                        <button onClick={() => currentDomainIdx === 0 ? setView('intro') : setCurrentDomainIdx(currentDomainIdx - 1)} className="font-bold text-slate-600">Back</button>
+                                        <button onClick={() => currentDomainIdx === DOMAINS.length - 1 ? setView('results') : setCurrentDomainIdx(currentDomainIdx + 1)} className="bg-indigo-600 text-white px-8 py-2 rounded-lg font-bold">Next</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'results' && (
+                            <div className="space-y-8">
+                                <div className="bg-white p-8 md:p-12 rounded-2xl shadow-xl border border-slate-200 text-center">
+                                    <h2 className="text-2xl font-bold mb-6">Your AI Readiness Result</h2>
+                                    <div className={`w-40 h-40 mx-auto rounded-full border-8 ${status.border} flex flex-col items-center justify-center mb-6`}>
+                                        <span className="text-5xl font-black">{scoreData}</span>
+                                        <span className="text-xs font-bold opacity-50">SCORE</span>
+                                    </div>
+                                    <div className={`inline-block px-6 py-2 rounded-full font-bold text-lg mb-8 ${status.bg} ${status.color}`}>{status.label}</div>
+                                    <div className="flex flex-wrap gap-4 justify-center">
+                                        <button onClick={downloadReport} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2"><Icon name="download" className="w-5 h-5" /> Download Report</button>
+                                        <button onClick={() => window.print()} className="bg-white border border-slate-300 px-6 py-3 rounded-xl font-bold">Print</button>
+                                    </div>
+                                </div>
+
+                                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Icon name="mail" className="text-indigo-600" /> Need Further Support?</h3>
+                                    <p className="opacity-70 mb-6 text-sm">Contact the Glow Engagement Team to discuss your results and implementation plans.</p>
+                                    <form onSubmit={handleEmail} className="space-y-4">
+                                        <textarea className="w-full p-4 border rounded-xl outline-none" placeholder="Your query..." value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})} required />
+                                        <button type="submit" className="bg-indigo-600 text-white px-6 py-3 rounded-xl font-bold">Email Education Scotland</button>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
