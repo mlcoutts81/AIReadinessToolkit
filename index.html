@@ -4,37 +4,89 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Ready Schools - Self-Evaluation Toolkit</title>
-    <!-- Tailwind CSS for styling -->
+    
+    <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React and ReactDOM - Specific versions for stability -->
-    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
-    <!-- Babel for JSX transpilation in the browser -->
-    <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
+    
+    <!-- 2. React and ReactDOM (Stable Production Versions) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    
+    <!-- 3. Babel for Browser-side JSX Transpilation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.11/babel.min.js"></script>
+
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+        
         body { 
             font-family: 'Inter', sans-serif; 
             margin: 0;
             padding: 0;
         }
+
+        /* High Contrast Themes */
         .high-contrast { background-color: #000 !important; color: #fff !important; }
-        .high-contrast .bg-white { background-color: #111 !important; border-color: #444 !important; }
+        .high-contrast .bg-white { background-color: #111 !important; border-color: #ffffff !important; }
         .high-contrast .bg-slate-50 { background-color: #000 !important; }
-        .high-contrast .text-slate-900, .high-contrast .text-slate-700, .high-contrast .text-slate-600 { color: #fff !important; }
-        .high-contrast .border-slate-200, .high-contrast .border-slate-300 { border-color: #fff !important; }
-        .high-contrast .bg-indigo-50 { background-color: #1a1a1a !important; border-color: #fff !important; }
+        .high-contrast .text-slate-900, 
+        .high-contrast .text-slate-700, 
+        .high-contrast .text-slate-600,
+        .high-contrast .text-indigo-900,
+        .high-contrast .text-indigo-800 { color: #fff !important; }
+        .high-contrast .border-slate-200, 
+        .high-contrast .border-slate-300 { border-color: #fff !important; }
+        .high-contrast .bg-indigo-50,
+        .high-contrast .bg-slate-50 { background-color: #1a1a1a !important; border: 1px solid #fff !important; }
         .high-contrast .text-indigo-600 { color: #38bdf8 !important; }
+        .high-contrast input, .high-contrast textarea { background-color: #000 !important; color: #fff !important; border-color: #fff !important; }
+        
         @media print { .no-print { display: none !important; } }
+
+        /* Initial Loading State Styles */
+        #loading-state {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f8fafc;
+        }
+        #error-state {
+            display: none;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
+    <!-- Visible until React mounts -->
+    <div id="loading-state">
+        <div class="text-center">
+            <div class="inline-block w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+            <p class="text-slate-600 font-medium">Initializing Toolkit...</p>
+        </div>
+    </div>
+
+    <!-- Error message if script fails -->
+    <div id="error-state">
+        <div class="max-w-md">
+            <h2 class="text-red-600 font-bold text-xl mb-2">Failed to load toolkit</h2>
+            <p class="text-slate-600 mb-4">This usually happens if scripts are blocked by your browser or network. Please try refreshing or checking your internet connection.</p>
+            <button onclick="window.location.reload()" class="bg-indigo-600 text-white px-4 py-2 rounded">Retry</button>
+        </div>
+    </div>
+
     <div id="root"></div>
 
-    <script type="text/babel">
+    <!-- The "data-presets" attribute is crucial for Babel to understand how to compile the code -->
+    <script type="text/babel" data-presets="env,react">
+        console.log("Babel script started processing...");
         const { useState, useMemo, useEffect } = React;
 
-        // Custom Icon Components (Inline SVGs for maximum portability)
+        // Inline SVGs to avoid external image dependencies
         const Icon = ({ name, className = "w-6 h-6" }) => {
             const icons = {
                 users: <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8m13 10v-2a4 4 0 0 0-3-3.87M17 7a4 4 0 1 1-4.24 3" />,
@@ -164,6 +216,13 @@
             const [highContrast, setHighContrast] = useState(false);
             const [contactForm, setContactForm] = useState({ subject: 'AI Implementation Support', message: '' });
 
+            // Hide the loading state once the component mounts
+            useEffect(() => {
+                const loader = document.getElementById('loading-state');
+                if (loader) loader.style.display = 'none';
+                console.log("React App mounted successfully.");
+            }, []);
+
             const scoreData = useMemo(() => {
                 const values = Object.values(answers);
                 if (values.length === 0) return 0;
@@ -219,7 +278,7 @@
                                     <p className="text-sm opacity-70">Self-Evaluation Toolkit</p>
                                 </div>
                             </div>
-                            <button onClick={() => setHighContrast(!highContrast)} className="mt-4 md:mt-0 flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 text-sm hover:bg-white transition-colors">
+                            <button onClick={() => setHighContrast(!highContrast)} className="mt-4 md:mt-0 flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 text-sm hover:bg-white transition-colors no-print">
                                 <Icon name="settings" className="w-4 h-4" /> Toggle Contrast
                             </button>
                         </header>
@@ -227,7 +286,7 @@
                         {view === 'intro' && (
                             <div className="bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-slate-200">
                                 <h2 className="text-3xl font-bold mb-4">Evaluate your school.</h2>
-                                <p className="text-lg opacity-80 mb-8">This tool is designed for SLTs to measure AI preparedness based on national frameworks.</p>
+                                <p className="text-lg opacity-80 mb-8 leading-relaxed">This tool is designed for Senior Leadership Teams to measure AI preparedness based on national frameworks. Use this to identify gaps and plan your implementation journey.</p>
                                 <div className="grid md:grid-cols-2 gap-6 mb-8">
                                     <div className="flex flex-col gap-2">
                                         <label className="text-sm font-bold">School Name</label>
@@ -275,7 +334,7 @@
                                             <textarea className="w-full p-4 border rounded-xl resize-none h-32 outline-none focus:ring-2 focus:ring-indigo-500" value={actionPlans[currentDomain.id] || ''} onChange={e => setActionPlans({...actionPlans, [currentDomain.id]: e.target.value})} placeholder="What is your school currently doing or planning in this area?" />
                                         </div>
                                     </div>
-                                    <div className="p-6 bg-slate-50 border-t flex justify-between">
+                                    <div className="p-6 bg-slate-50 border-t flex justify-between no-print">
                                         <button onClick={() => currentDomainIdx === 0 ? setView('intro') : setCurrentDomainIdx(currentDomainIdx - 1)} className="font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-lg transition-colors">Back</button>
                                         <button onClick={() => currentDomainIdx === DOMAINS.length - 1 ? setView('results') : setCurrentDomainIdx(currentDomainIdx + 1)} className="bg-indigo-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-md">
                                             {currentDomainIdx === DOMAINS.length - 1 ? 'Finish' : 'Next'}
@@ -294,12 +353,12 @@
                                         <span className="text-xs font-bold opacity-50">SCORE</span>
                                     </div>
                                     <div className={`inline-block px-6 py-2 rounded-full font-bold text-lg mb-8 ${status.bg} ${status.color}`}>{status.label}</div>
-                                    <div className="flex flex-wrap gap-4 justify-center">
+                                    <div className="flex flex-wrap gap-4 justify-center no-print">
                                         <button onClick={downloadReport} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-black transition-all">
                                             <Icon name="download" className="w-5 h-5" /> Download Report
                                         </button>
                                         <button onClick={() => window.print()} className="bg-white border border-slate-300 px-6 py-3 rounded-xl font-bold hover:bg-slate-50 transition-all">
-                                            Print
+                                            Print / PDF
                                         </button>
                                         <button onClick={() => { if(confirm("Restart evaluation?")) setView('intro'); }} className="px-6 py-3 font-bold text-indigo-600 hover:underline">
                                             Restart Audit
@@ -307,7 +366,7 @@
                                     </div>
                                 </div>
 
-                                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm">
+                                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm no-print">
                                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
                                         <Icon name="mail" className="text-indigo-600" /> Need Further Support?
                                     </h3>
@@ -329,14 +388,22 @@
             );
         };
 
-        // Standard React 18 initialization with safety check
-        window.onload = () => {
+        // Improved root rendering with error boundary
+        try {
             const container = document.getElementById('root');
             if (container) {
                 const root = ReactDOM.createRoot(container);
                 root.render(<App />);
+            } else {
+                console.error("Root element not found.");
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('error-state').style.display = 'flex';
             }
-        };
+        } catch (err) {
+            console.error("Initialization error:", err);
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'flex';
+        }
     </script>
 </body>
 </html>
