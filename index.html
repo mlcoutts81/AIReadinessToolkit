@@ -7,9 +7,9 @@
     
     <!-- Robust CDN Links -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.11/babel.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react@18.2.0/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js" crossorigin></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -31,6 +31,7 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #f8fafc; display: flex; flex-direction: column;
             justify-content: center; align-items: center; z-index: 9999;
+            transition: opacity 0.5s ease;
         }
         .spinner {
             width: 40px; height: 40px; border: 4px solid #e2e8f0;
@@ -46,35 +47,52 @@
 
     <!-- Loading Screen -->
     <div id="loading-overlay">
-        <div class="spinner mb-4"></div>
-        <p id="loading-text" class="text-slate-600 font-medium">Loading Toolkit Components...</p>
+        <div id="loading-content" class="flex flex-col items-center">
+            <div class="spinner mb-4"></div>
+            <p id="loading-text" class="text-slate-600 font-medium text-center">Loading Toolkit...<br><span class="text-xs opacity-60">This may take a moment on school networks.</span></p>
+        </div>
         <div id="error-display">
-            <p class="font-bold">Error Loading Application</p>
-            <p class="text-sm mt-2">The AI Toolkit failed to initialize. This may be due to school internet filters blocking script CDNs (React/Babel).</p>
-            <button onclick="window.location.reload()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Try Again</button>
+            <p class="font-bold text-lg mb-2">Technical Initialization Error</p>
+            <p class="text-sm">The toolkit is struggling to load its core components. This is often caused by school web filters blocking common library scripts (React/Babel).</p>
+            <div class="mt-4 p-3 bg-slate-100 rounded text-xs text-left font-mono">
+                Troubleshooting:<br>
+                1. Try a different browser (Edge/Chrome).<br>
+                2. Check if you are on a VPN.<br>
+                3. Contact IT to allow unpkg.com.
+            </div>
+            <button onclick="window.location.reload()" class="mt-6 bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold shadow-md hover:bg-indigo-700 transition-colors">Retry Connection</button>
         </div>
     </div>
 
     <div id="root"></div>
 
-    <!-- Diagnostic Script -->
+    <!-- Error Watchdog -->
     <script>
-        window.addEventListener('error', function(e) {
-            console.error("Global Error Caught:", e.message);
-            const overlay = document.getElementById('loading-overlay');
+        // If the app hasn't loaded in 6 seconds, show the error display
+        const watchdog = setTimeout(() => {
+            const loader = document.getElementById('loading-content');
             const errorDisp = document.getElementById('error-display');
-            const loadingText = document.getElementById('loading-text');
-            if (overlay) overlay.style.background = "#fff";
-            if (loadingText) loadingText.style.display = "none";
-            if (errorDisp) errorDisp.style.display = "block";
+            if (loader && loader.parentElement.style.display !== 'none') {
+                loader.style.display = 'none';
+                errorDisp.style.display = 'block';
+            }
+        }, 6000);
+
+        window.addEventListener('error', function(e) {
+            console.error("Initialization Error:", e);
+            clearTimeout(watchdog);
+            const loader = document.getElementById('loading-content');
+            const errorDisp = document.getElementById('error-display');
+            if (loader) loader.style.display = 'none';
+            if (errorDisp) errorDisp.style.display = 'block';
         });
     </script>
 
     <!-- Main Application Logic -->
-    <script type="text/babel" data-presets="react,stage-2">
+    <script type="text/babel" data-presets="env,react">
         const { useState, useMemo, useEffect } = React;
 
-        // Simplified Icon Component using Emoji as fail-safe for broken SVG paths
+        // Simplified Icon Component
         const Icon = ({ name }) => {
             const icons = {
                 users: "👥",
@@ -87,7 +105,7 @@
                 download: "💾",
                 settings: "⚙️"
             };
-            return <span className="text-xl" role="img" aria-hidden="true">{icons[name] || "•"}</span>;
+            return <span className="text-xl" role="img" aria-label={name}>{icons[name] || "•"}</span>;
         };
 
         const DOMAINS = [
@@ -201,10 +219,15 @@
             const [contactMessage, setContactMessage] = useState('');
 
             useEffect(() => {
-                // Remove loader once React is ready
+                // Clear the watchdog timer
+                if (window.watchdog) clearTimeout(window.watchdog);
+                
+                // Hide the loader
                 const loader = document.getElementById('loading-overlay');
-                if (loader) loader.style.display = 'none';
-                console.log("App Initialized Successfully");
+                if (loader) {
+                    loader.style.opacity = '0';
+                    setTimeout(() => loader.style.display = 'none', 500);
+                }
             }, []);
 
             const score = useMemo(() => {
@@ -240,7 +263,7 @@
                                 <h1 className="text-2xl font-bold">AI Ready Schools</h1>
                                 <p className="text-sm opacity-70">Self-Evaluation Toolkit</p>
                             </div>
-                            <button onClick={() => setHighContrast(!highContrast)} className="text-sm px-4 py-2 border rounded-full no-print">
+                            <button onClick={() => setHighContrast(!highContrast)} className="text-sm px-4 py-2 border rounded-full no-print hover:bg-white transition-colors">
                                 {highContrast ? 'Standard Mode' : 'High Contrast'}
                             </button>
                         </header>
@@ -248,29 +271,35 @@
                         {view === 'intro' && (
                             <div className="bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-slate-200">
                                 <h2 className="text-3xl font-bold mb-4">Evaluate your school.</h2>
-                                <p className="text-lg opacity-80 mb-8 leading-relaxed">Assess your progress and plan future actions for staff awareness, student ethics, and strategic policy.</p>
+                                <p className="text-lg opacity-80 mb-8 leading-relaxed">Assess your progress and plan future actions for staff awareness, student ethics, and strategic policy. Your data is not saved on any server.</p>
                                 <div className="grid md:grid-cols-2 gap-6 mb-8">
-                                    <input type="text" placeholder="School Name" className="p-3 border rounded-lg" value={schoolInfo.name} onChange={e => setSchoolInfo({...schoolInfo, name: e.target.value})} />
-                                    <input type="text" placeholder="Local Authority" className="p-3 border rounded-lg" value={schoolInfo.la} onChange={e => setSchoolInfo({...schoolInfo, la: e.target.value})} />
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-xs font-bold uppercase opacity-50 ml-1">School Name</label>
+                                        <input type="text" placeholder="e.g. West Primary" className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={schoolInfo.name} onChange={e => setSchoolInfo({...schoolInfo, name: e.target.value})} />
+                                    </div>
+                                    <div className="flex flex-col gap-1">
+                                        <label className="text-xs font-bold uppercase opacity-50 ml-1">Local Authority</label>
+                                        <input type="text" placeholder="e.g. Falkirk" className="p-3 border rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none" value={schoolInfo.la} onChange={e => setSchoolInfo({...schoolInfo, la: e.target.value})} />
+                                    </div>
                                 </div>
-                                <button onClick={() => setView('evaluate')} className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg">Start Evaluation</button>
+                                <button onClick={() => setView('evaluate')} className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition-all active:scale-95">Start Evaluation</button>
                             </div>
                         )}
 
                         {view === 'evaluate' && (
                             <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-                                <div className="bg-indigo-50 p-6 flex items-center gap-3">
+                                <div className="bg-indigo-50 p-6 flex items-center gap-3 border-b border-indigo-100">
                                     <Icon name={currentDomain.icon} />
                                     <h2 className="text-xl font-bold">{currentDomain.title}</h2>
                                 </div>
                                 <div className="p-6 md:p-10 space-y-8">
-                                    <p className="text-sm italic opacity-70">{currentDomain.description}</p>
+                                    <p className="text-sm italic opacity-70 leading-relaxed">{currentDomain.description}</p>
                                     {currentDomain.questions.map(q => (
                                         <div key={q.id} className="space-y-4">
-                                            <p className="font-semibold text-lg">{q.text}</p>
+                                            <p className="font-semibold text-lg leading-tight">{q.text}</p>
                                             <div className="grid gap-3">
                                                 {q.options.map(opt => (
-                                                    <button key={opt.label} onClick={() => setAnswers({...answers, [q.id]: opt.value})} className={`w-full text-left p-4 rounded-xl border transition-all ${answers[q.id] === opt.value ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'border-slate-200'}`}>
+                                                    <button key={opt.label} onClick={() => setAnswers({...answers, [q.id]: opt.value})} className={`w-full text-left p-4 rounded-xl border transition-all hover:bg-slate-50 ${answers[q.id] === opt.value ? 'border-indigo-600 bg-indigo-50 ring-2 ring-indigo-600' : 'border-slate-200'}`}>
                                                         {opt.label}
                                                     </button>
                                                 ))}
@@ -279,12 +308,12 @@
                                     ))}
                                     <div className="pt-6 border-t border-slate-100">
                                         <p className="font-bold mb-2">Planned Activities</p>
-                                        <textarea className="w-full p-4 border rounded-xl h-32" value={actionPlans[currentDomain.id] || ''} onChange={e => setActionPlans({...actionPlans, [currentDomain.id]: e.target.value})} placeholder="What are your next steps in this area?" />
+                                        <textarea className="w-full p-4 border rounded-xl h-32 focus:ring-2 focus:ring-indigo-500 outline-none" value={actionPlans[currentDomain.id] || ''} onChange={e => setActionPlans({...actionPlans, [currentDomain.id]: e.target.value})} placeholder="What are your next steps in this area?" />
                                     </div>
                                 </div>
                                 <div className="p-6 bg-slate-50 border-t flex justify-between no-print">
-                                    <button onClick={() => currentDomainIdx === 0 ? setView('intro') : setCurrentDomainIdx(currentDomainIdx - 1)} className="font-bold">Back</button>
-                                    <button onClick={() => currentDomainIdx === DOMAINS.length - 1 ? setView('results') : setCurrentDomainIdx(currentDomainIdx + 1)} className="bg-indigo-600 text-white px-8 py-2 rounded-lg font-bold">Next</button>
+                                    <button onClick={() => currentDomainIdx === 0 ? setView('intro') : setCurrentDomainIdx(currentDomainIdx - 1)} className="font-bold px-4 py-2 hover:bg-slate-200 rounded-lg transition-colors">Back</button>
+                                    <button onClick={() => currentDomainIdx === DOMAINS.length - 1 ? setView('results') : setCurrentDomainIdx(currentDomainIdx + 1)} className="bg-indigo-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-indigo-700 shadow-md">Next</button>
                                 </div>
                             </div>
                         )}
@@ -299,8 +328,8 @@
                                     </div>
                                     <div className={`inline-block px-6 py-2 rounded-full font-bold text-lg mb-8 ${status.bg} ${status.color}`}>{status.label}</div>
                                     <div className="flex gap-4 justify-center no-print">
-                                        <button onClick={() => window.print()} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold">Print Results</button>
-                                        <button onClick={() => setView('intro')} className="px-6 py-3 font-bold text-indigo-600">Restart</button>
+                                        <button onClick={() => window.print()} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold hover:bg-black transition-colors">Print / PDF</button>
+                                        <button onClick={() => setView('intro')} className="px-6 py-3 font-bold text-indigo-600 hover:underline">Restart Audit</button>
                                     </div>
                                 </div>
 
@@ -308,8 +337,8 @@
                                     <h3 className="text-xl font-bold mb-4 flex items-center gap-2">Need Further Support?</h3>
                                     <p className="opacity-70 mb-6 text-sm">Email the Glow Engagement Team directly to discuss these results.</p>
                                     <form onSubmit={handleEmail} className="space-y-4">
-                                        <textarea className="w-full p-4 border rounded-xl h-32" value={contactMessage} onChange={e => setContactMessage(e.target.value)} placeholder="Message..." required />
-                                        <button type="submit" className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold">Email Education Scotland</button>
+                                        <textarea className="w-full p-4 border rounded-xl h-32 outline-none focus:ring-2 focus:ring-indigo-500" value={contactMessage} onChange={e => setContactMessage(e.target.value)} placeholder="Type your message here..." required />
+                                        <button type="submit" className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold shadow-lg hover:bg-indigo-700">Email Education Scotland</button>
                                     </form>
                                 </div>
                             </div>
@@ -319,7 +348,8 @@
             );
         };
 
-        const root = ReactDOM.createRoot(document.getElementById('root'));
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
         root.render(<App />);
     </script>
 </body>
