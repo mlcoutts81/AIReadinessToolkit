@@ -5,105 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Ready Schools - Self-Evaluation Toolkit</title>
     
-    <!-- 1. Tailwind CSS -->
+    <!-- Robust CDN Links -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- 2. React and ReactDOM (Stable Production Versions) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
-    
-    <!-- 3. Babel for Browser-side JSX Transpilation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.11/babel.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.11/babel.min.js" crossorigin></script>
 
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-        
-        body { 
-            font-family: 'Inter', sans-serif; 
-            margin: 0;
-            padding: 0;
-        }
+        body { font-family: 'Inter', sans-serif; margin: 0; padding: 0; }
 
         /* High Contrast Themes */
         .high-contrast { background-color: #000 !important; color: #fff !important; }
         .high-contrast .bg-white { background-color: #111 !important; border-color: #ffffff !important; }
         .high-contrast .bg-slate-50 { background-color: #000 !important; }
-        .high-contrast .text-slate-900, 
-        .high-contrast .text-slate-700, 
-        .high-contrast .text-slate-600,
-        .high-contrast .text-indigo-900,
-        .high-contrast .text-indigo-800 { color: #fff !important; }
-        .high-contrast .border-slate-200, 
-        .high-contrast .border-slate-300 { border-color: #fff !important; }
-        .high-contrast .bg-indigo-50,
-        .high-contrast .bg-slate-50 { background-color: #1a1a1a !important; border: 1px solid #fff !important; }
+        .high-contrast .text-slate-900, .high-contrast .text-slate-700, .high-contrast .text-slate-600 { color: #fff !important; }
+        .high-contrast .border-slate-200, .high-contrast .border-slate-300 { border-color: #fff !important; }
+        .high-contrast .bg-indigo-50 { background-color: #1a1a1a !important; border: 1px solid #fff !important; }
         .high-contrast .text-indigo-600 { color: #38bdf8 !important; }
-        .high-contrast input, .high-contrast textarea { background-color: #000 !important; color: #fff !important; border-color: #fff !important; }
+        .high-contrast input, .high-contrast textarea { background-color: #000 !important; color: #fff !important; border: 1px solid #fff !important; }
         
         @media print { .no-print { display: none !important; } }
 
-        /* Initial Loading State Styles */
-        #loading-state {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #f8fafc;
+        #loading-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #f8fafc; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
         }
-        #error-state {
-            display: none;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #fff;
-            padding: 20px;
-            text-align: center;
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #e2e8f0;
+            border-top: 4px solid #4f46e5; border-radius: 50%;
+            animation: spin 1s linear infinite;
         }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #error-display { display: none; color: #dc2626; padding: 20px; text-align: center; max-width: 400px; }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-900">
-    <!-- Visible until React mounts -->
-    <div id="loading-state">
-        <div class="text-center">
-            <div class="inline-block w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-4"></div>
-            <p class="text-slate-600 font-medium">Initializing Toolkit...</p>
-        </div>
-    </div>
 
-    <!-- Error message if script fails -->
-    <div id="error-state">
-        <div class="max-w-md">
-            <h2 class="text-red-600 font-bold text-xl mb-2">Failed to load toolkit</h2>
-            <p class="text-slate-600 mb-4">This usually happens if scripts are blocked by your browser or network. Please try refreshing or checking your internet connection.</p>
-            <button onclick="window.location.reload()" class="bg-indigo-600 text-white px-4 py-2 rounded">Retry</button>
+    <!-- Loading Screen -->
+    <div id="loading-overlay">
+        <div class="spinner mb-4"></div>
+        <p id="loading-text" class="text-slate-600 font-medium">Loading Toolkit Components...</p>
+        <div id="error-display">
+            <p class="font-bold">Error Loading Application</p>
+            <p class="text-sm mt-2">The AI Toolkit failed to initialize. This may be due to school internet filters blocking script CDNs (React/Babel).</p>
+            <button onclick="window.location.reload()" class="mt-4 bg-indigo-600 text-white px-4 py-2 rounded">Try Again</button>
         </div>
     </div>
 
     <div id="root"></div>
 
-    <!-- The "data-presets" attribute is crucial for Babel to understand how to compile the code -->
-    <script type="text/babel" data-presets="env,react">
-        console.log("Babel script started processing...");
+    <!-- Diagnostic Script -->
+    <script>
+        window.addEventListener('error', function(e) {
+            console.error("Global Error Caught:", e.message);
+            const overlay = document.getElementById('loading-overlay');
+            const errorDisp = document.getElementById('error-display');
+            const loadingText = document.getElementById('loading-text');
+            if (overlay) overlay.style.background = "#fff";
+            if (loadingText) loadingText.style.display = "none";
+            if (errorDisp) errorDisp.style.display = "block";
+        });
+    </script>
+
+    <!-- Main Application Logic -->
+    <script type="text/babel" data-presets="react,stage-2">
         const { useState, useMemo, useEffect } = React;
 
-        // Inline SVGs to avoid external image dependencies
-        const Icon = ({ name, className = "w-6 h-6" }) => {
+        // Simplified Icon Component using Emoji as fail-safe for broken SVG paths
+        const Icon = ({ name }) => {
             const icons = {
-                users: <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2m7-10a4 4 0 1 0 0-8 4 4 0 0 0 0 8m13 10v-2a4 4 0 0 0-3-3.87M17 7a4 4 0 1 1-4.24 3" />,
-                shield: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />,
-                book: <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5V4.5z" />,
-                globe: <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />,
-                layout: <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="9" y2="9"/><line x1="9" x2="9" y1="21" y2="9"/>,
-                check: <polyline points="20 6 9 17 4 12" />,
-                mail: <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/><rect width="20" height="16" x="2" y="4" rx="2"/>,
-                download: <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>,
-                settings: <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/>
+                users: "👥",
+                shield: "🛡️",
+                book: "📖",
+                globe: "🌐",
+                layout: "📋",
+                check: "✅",
+                mail: "✉️",
+                download: "💾",
+                settings: "⚙️"
             };
-            return (
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-                    {icons[name] || <circle cx="12" cy="12" r="10" />}
-                </svg>
-            );
+            return <span className="text-xl" role="img" aria-hidden="true">{icons[name] || "•"}</span>;
         };
 
         const DOMAINS = [
@@ -119,17 +103,17 @@
                         options: [
                             { label: 'Not yet shared with staff', value: 1 },
                             { label: 'Basic awareness sessions delivered', value: 4 },
-                            { label: 'Actively shared via in-service days and professional enquiries', value: 7 },
-                            { label: 'Embedded in school culture with shared practice in resource creation and admin', value: 10 }
+                            { label: 'Actively shared via in-service days', value: 7 },
+                            { label: 'Embedded in school culture and shared practice', value: 10 }
                         ]
                     },
                     {
                         id: 'q2',
-                        text: 'Is the use of AI tools purposeful (identifying the task/challenge before the tool)?',
+                        text: 'Is the use of AI tools purposeful (task-first)?',
                         options: [
                             { label: 'Tools often used "just because"', value: 2 },
-                            { label: 'Emerging focus on identifying specific challenges first', value: 5 },
-                            { label: 'Consistent focus on purposeful use to support learning and admin', value: 10 }
+                            { label: 'Focus on identifying challenges first', value: 5 },
+                            { label: 'Consistent focus on purposeful use', value: 10 }
                         ]
                     }
                 ]
@@ -142,12 +126,12 @@
                 questions: [
                     {
                         id: 'q3',
-                        text: 'To what extent is Al ethics, bias, and misinformation integrated into the curriculum?',
+                        text: 'To what extent is Al ethics integrated into the curriculum?',
                         options: [
                             { label: 'Not covered', value: 1 },
-                            { label: 'Taught in specific ICT/Computing lessons only', value: 4 },
-                            { label: 'Broad inclusion of responsible use and societal impact', value: 8 },
-                            { label: 'Core part of Information Literacy across all levels', value: 10 }
+                            { label: 'Taught in specific ICT lessons', value: 4 },
+                            { label: 'Broad inclusion across levels', value: 8 },
+                            { label: 'Core part of Digital Literacy', value: 10 }
                         ]
                     }
                 ]
@@ -156,16 +140,16 @@
                 id: 'pedagogy',
                 title: 'Hands-on Learning',
                 icon: 'book',
-                description: "Student use of tools (e.g. Adobe Express) and clear categorization of Al permissibility in assessments.",
+                description: "Student use of tools (e.g. Adobe Express) and clear categorization of Al permissibility.",
                 questions: [
                     {
                         id: 'q4',
                         text: 'How clear is the school regarding AI permissibility levels?',
                         options: [
-                            { label: 'No clear policy shared with students', value: 1 },
+                            { label: 'No clear policy shared', value: 1 },
                             { label: 'Policies exist but are inconsistent', value: 4 },
-                            { label: 'Clear communication on permissibility for all tasks', value: 8 },
-                            { label: 'Students critically select Al tools based on ethical tiers', value: 10 }
+                            { label: 'Clear communication for all tasks', value: 8 },
+                            { label: 'Students select tools based on ethical tiers', value: 10 }
                         ]
                     }
                 ]
@@ -178,7 +162,7 @@
                 questions: [
                     {
                         id: 'q6',
-                        text: 'How do you communicate the school\'s Al position and support for parents?',
+                        text: 'How do you communicate the school\'s Al position to parents?',
                         options: [
                             { label: 'No communication yet', value: 1 },
                             { label: 'Resources provided occasionally', value: 5 },
@@ -199,8 +183,8 @@
                         options: [
                             { label: 'Not mentioned', value: 1 },
                             { label: 'Technical skill only', value: 4 },
-                            { label: 'Strategy includes ethics, privacy, and inclusivity', value: 8 },
-                            { label: 'Aligned with national ethical frameworks', value: 10 }
+                            { label: 'Includes ethics, privacy, and inclusivity', value: 8 },
+                            { label: 'Aligned with national frameworks', value: 10 }
                         ]
                     }
                 ]
@@ -212,55 +196,38 @@
             const [currentDomainIdx, setCurrentDomainIdx] = useState(0);
             const [answers, setAnswers] = useState({});
             const [actionPlans, setActionPlans] = useState({});
-            const [schoolInfo, setSchoolInfo] = useState({ name: '', la: '', tools: [] });
+            const [schoolInfo, setSchoolInfo] = useState({ name: '', la: '' });
             const [highContrast, setHighContrast] = useState(false);
-            const [contactForm, setContactForm] = useState({ subject: 'AI Implementation Support', message: '' });
+            const [contactMessage, setContactMessage] = useState('');
 
-            // Hide the loading state once the component mounts
             useEffect(() => {
-                const loader = document.getElementById('loading-state');
+                // Remove loader once React is ready
+                const loader = document.getElementById('loading-overlay');
                 if (loader) loader.style.display = 'none';
-                console.log("React App mounted successfully.");
+                console.log("App Initialized Successfully");
             }, []);
 
-            const scoreData = useMemo(() => {
+            const score = useMemo(() => {
                 const values = Object.values(answers);
                 if (values.length === 0) return 0;
-                const total = values.reduce((acc, val) => acc + val, 0);
-                return Math.round((total / values.length) * 10) / 10;
+                return Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10;
             }, [answers]);
 
-            const getStatus = (score) => {
-                if (score < 3) return { label: 'Emerging', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-500' };
-                if (score < 6) return { label: 'Developing', color: 'text-orange-500', bg: 'bg-orange-50', border: 'border-orange-500' };
-                if (score < 9) return { label: 'Proficient', color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-500' };
-                return { label: 'Confident', color: 'text-green-500', bg: 'bg-green-50', border: 'border-green-500' };
+            const getStatus = (s) => {
+                if (s < 3) return { label: 'Emerging', color: 'text-red-600', bg: 'bg-red-50', border: 'border-red-600' };
+                if (s < 6) return { label: 'Developing', color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-600' };
+                if (s < 9) return { label: 'Proficient', color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-600' };
+                return { label: 'Confident', color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-600' };
             };
 
-            const status = getStatus(scoreData);
-
-            const downloadReport = () => {
-                const timestamp = new Date().toLocaleDateString();
-                let content = `AI READINESS EVALUATION REPORT - ${schoolInfo.name || 'Untitled'}\n`;
-                content += `==========================================\n\n`;
-                content += `Overall Score: ${scoreData}/10 (${status.label})\n\n`;
-                DOMAINS.forEach(d => {
-                    content += `${d.title.toUpperCase()}\n`;
-                    content += `Action Plan: ${actionPlans[d.id] || 'None listed.'}\n\n`;
-                });
-                const blob = new Blob([content], { type: 'text/plain' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `AI_Readiness_${(schoolInfo.name || 'Report').replace(/\s+/g, '_')}.txt`;
-                a.click();
-            };
+            const status = getStatus(score);
 
             const handleEmail = (e) => {
                 e.preventDefault();
                 const recipient = "glow.engagement@educationscotland.gov.scot";
-                const body = `School: ${schoolInfo.name}\nReadiness: ${scoreData}/10\n\nMessage: ${contactForm.message}`;
-                window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(contactForm.subject)}&body=${encodeURIComponent(body)}`;
+                const subject = `AI Evaluation: ${schoolInfo.name}`;
+                const body = `School: ${schoolInfo.name}\nAuthority: ${schoolInfo.la}\nScore: ${score}/10\n\nMessage: ${contactMessage}`;
+                window.location.href = `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
             };
 
             const currentDomain = DOMAINS[currentDomainIdx];
@@ -268,78 +235,56 @@
             return (
                 <div className={`min-h-screen p-4 md:p-8 transition-colors ${highContrast ? 'high-contrast' : ''}`}>
                     <div className="max-w-4xl mx-auto">
-                        <header className="flex flex-col md:flex-row justify-between items-center mb-8 border-b pb-6 border-slate-200">
-                            <div className="flex items-center gap-3">
-                                <div className="bg-indigo-600 p-2 rounded-lg text-white">
-                                    <Icon name="layout" />
-                                </div>
-                                <div>
-                                    <h1 className="text-2xl font-bold">AI Ready Schools</h1>
-                                    <p className="text-sm opacity-70">Self-Evaluation Toolkit</p>
-                                </div>
+                        <header className="flex justify-between items-center mb-8 border-b pb-6 border-slate-200">
+                            <div>
+                                <h1 className="text-2xl font-bold">AI Ready Schools</h1>
+                                <p className="text-sm opacity-70">Self-Evaluation Toolkit</p>
                             </div>
-                            <button onClick={() => setHighContrast(!highContrast)} className="mt-4 md:mt-0 flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 text-sm hover:bg-white transition-colors no-print">
-                                <Icon name="settings" className="w-4 h-4" /> Toggle Contrast
+                            <button onClick={() => setHighContrast(!highContrast)} className="text-sm px-4 py-2 border rounded-full no-print">
+                                {highContrast ? 'Standard Mode' : 'High Contrast'}
                             </button>
                         </header>
 
                         {view === 'intro' && (
                             <div className="bg-white p-6 md:p-10 rounded-2xl shadow-sm border border-slate-200">
                                 <h2 className="text-3xl font-bold mb-4">Evaluate your school.</h2>
-                                <p className="text-lg opacity-80 mb-8 leading-relaxed">This tool is designed for Senior Leadership Teams to measure AI preparedness based on national frameworks. Use this to identify gaps and plan your implementation journey.</p>
+                                <p className="text-lg opacity-80 mb-8 leading-relaxed">Assess your progress and plan future actions for staff awareness, student ethics, and strategic policy.</p>
                                 <div className="grid md:grid-cols-2 gap-6 mb-8">
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-bold">School Name</label>
-                                        <input type="text" placeholder="e.g. West Primary" className="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={schoolInfo.name} onChange={e => setSchoolInfo({...schoolInfo, name: e.target.value})} />
-                                    </div>
-                                    <div className="flex flex-col gap-2">
-                                        <label className="text-sm font-bold">Local Authority</label>
-                                        <input type="text" placeholder="e.g. Falkirk" className="p-3 border rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" value={schoolInfo.la} onChange={e => setSchoolInfo({...schoolInfo, la: e.target.value})} />
-                                    </div>
+                                    <input type="text" placeholder="School Name" className="p-3 border rounded-lg" value={schoolInfo.name} onChange={e => setSchoolInfo({...schoolInfo, name: e.target.value})} />
+                                    <input type="text" placeholder="Local Authority" className="p-3 border rounded-lg" value={schoolInfo.la} onChange={e => setSchoolInfo({...schoolInfo, la: e.target.value})} />
                                 </div>
-                                <button onClick={() => setView('evaluate')} className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:bg-indigo-700 transition-all">Start Audit</button>
+                                <button onClick={() => setView('evaluate')} className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold shadow-lg">Start Evaluation</button>
                             </div>
                         )}
 
                         {view === 'evaluate' && (
-                            <div className="space-y-6">
-                                <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-                                    <div className="bg-indigo-50 p-6 border-b border-indigo-100 flex items-center gap-3">
-                                        <Icon name={currentDomain.icon} className="text-indigo-600" />
-                                        <h2 className="text-xl font-bold">{currentDomain.title}</h2>
-                                    </div>
-                                    <div className="p-6 md:p-10 space-y-8">
-                                        <p className="text-sm italic opacity-70 leading-relaxed">{currentDomain.description}</p>
-                                        {currentDomain.questions.map(q => (
-                                            <div key={q.id} className="space-y-4">
-                                                <p className="font-semibold text-lg leading-tight">{q.text}</p>
-                                                <div className="grid grid-cols-1 gap-3">
-                                                    {q.options.map(opt => (
-                                                        <button 
-                                                            key={opt.label} 
-                                                            onClick={() => setAnswers({...answers, [q.id]: opt.value})} 
-                                                            className={`w-full text-left p-4 rounded-xl border transition-all flex justify-between items-center group ${answers[q.id] === opt.value ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'border-slate-200 hover:border-indigo-300 hover:bg-slate-50'}`}
-                                                        >
-                                                            <span className="flex-1">{opt.label}</span>
-                                                            <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-colors ${answers[q.id] === opt.value ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300 group-hover:border-indigo-400'}`}>
-                                                                {answers[q.id] === opt.value && <Icon name="check" className="text-white w-4 h-4" />}
-                                                            </div>
-                                                        </button>
-                                                    ))}
-                                                </div>
+                            <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                                <div className="bg-indigo-50 p-6 flex items-center gap-3">
+                                    <Icon name={currentDomain.icon} />
+                                    <h2 className="text-xl font-bold">{currentDomain.title}</h2>
+                                </div>
+                                <div className="p-6 md:p-10 space-y-8">
+                                    <p className="text-sm italic opacity-70">{currentDomain.description}</p>
+                                    {currentDomain.questions.map(q => (
+                                        <div key={q.id} className="space-y-4">
+                                            <p className="font-semibold text-lg">{q.text}</p>
+                                            <div className="grid gap-3">
+                                                {q.options.map(opt => (
+                                                    <button key={opt.label} onClick={() => setAnswers({...answers, [q.id]: opt.value})} className={`w-full text-left p-4 rounded-xl border transition-all ${answers[q.id] === opt.value ? 'border-indigo-600 bg-indigo-50 ring-1 ring-indigo-600' : 'border-slate-200'}`}>
+                                                        {opt.label}
+                                                    </button>
+                                                ))}
                                             </div>
-                                        ))}
-                                        <div className="pt-6 border-t border-slate-100">
-                                            <p className="font-bold mb-2">Current & Planned Activities</p>
-                                            <textarea className="w-full p-4 border rounded-xl resize-none h-32 outline-none focus:ring-2 focus:ring-indigo-500" value={actionPlans[currentDomain.id] || ''} onChange={e => setActionPlans({...actionPlans, [currentDomain.id]: e.target.value})} placeholder="What is your school currently doing or planning in this area?" />
                                         </div>
+                                    ))}
+                                    <div className="pt-6 border-t border-slate-100">
+                                        <p className="font-bold mb-2">Planned Activities</p>
+                                        <textarea className="w-full p-4 border rounded-xl h-32" value={actionPlans[currentDomain.id] || ''} onChange={e => setActionPlans({...actionPlans, [currentDomain.id]: e.target.value})} placeholder="What are your next steps in this area?" />
                                     </div>
-                                    <div className="p-6 bg-slate-50 border-t flex justify-between no-print">
-                                        <button onClick={() => currentDomainIdx === 0 ? setView('intro') : setCurrentDomainIdx(currentDomainIdx - 1)} className="font-bold text-slate-600 px-4 py-2 hover:bg-slate-200 rounded-lg transition-colors">Back</button>
-                                        <button onClick={() => currentDomainIdx === DOMAINS.length - 1 ? setView('results') : setCurrentDomainIdx(currentDomainIdx + 1)} className="bg-indigo-600 text-white px-8 py-2 rounded-lg font-bold hover:bg-indigo-700 transition-all shadow-md">
-                                            {currentDomainIdx === DOMAINS.length - 1 ? 'Finish' : 'Next'}
-                                        </button>
-                                    </div>
+                                </div>
+                                <div className="p-6 bg-slate-50 border-t flex justify-between no-print">
+                                    <button onClick={() => currentDomainIdx === 0 ? setView('intro') : setCurrentDomainIdx(currentDomainIdx - 1)} className="font-bold">Back</button>
+                                    <button onClick={() => currentDomainIdx === DOMAINS.length - 1 ? setView('results') : setCurrentDomainIdx(currentDomainIdx + 1)} className="bg-indigo-600 text-white px-8 py-2 rounded-lg font-bold">Next</button>
                                 </div>
                             </div>
                         )}
@@ -347,38 +292,24 @@
                         {view === 'results' && (
                             <div className="space-y-8">
                                 <div className="bg-white p-8 md:p-12 rounded-2xl shadow-xl border border-slate-200 text-center">
-                                    <h2 className="text-2xl font-bold mb-6">Your AI Readiness Result</h2>
+                                    <h2 className="text-2xl font-bold mb-6">Readiness Score</h2>
                                     <div className={`w-40 h-40 mx-auto rounded-full border-8 ${status.border} flex flex-col items-center justify-center mb-6`}>
-                                        <span className="text-5xl font-black">{scoreData}</span>
-                                        <span className="text-xs font-bold opacity-50">SCORE</span>
+                                        <span className="text-5xl font-black">{score}</span>
+                                        <span className="text-xs font-bold opacity-50">/ 10</span>
                                     </div>
                                     <div className={`inline-block px-6 py-2 rounded-full font-bold text-lg mb-8 ${status.bg} ${status.color}`}>{status.label}</div>
-                                    <div className="flex flex-wrap gap-4 justify-center no-print">
-                                        <button onClick={downloadReport} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-black transition-all">
-                                            <Icon name="download" className="w-5 h-5" /> Download Report
-                                        </button>
-                                        <button onClick={() => window.print()} className="bg-white border border-slate-300 px-6 py-3 rounded-xl font-bold hover:bg-slate-50 transition-all">
-                                            Print / PDF
-                                        </button>
-                                        <button onClick={() => { if(confirm("Restart evaluation?")) setView('intro'); }} className="px-6 py-3 font-bold text-indigo-600 hover:underline">
-                                            Restart Audit
-                                        </button>
+                                    <div className="flex gap-4 justify-center no-print">
+                                        <button onClick={() => window.print()} className="bg-slate-900 text-white px-6 py-3 rounded-xl font-bold">Print Results</button>
+                                        <button onClick={() => setView('intro')} className="px-6 py-3 font-bold text-indigo-600">Restart</button>
                                     </div>
                                 </div>
 
-                                <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm no-print">
-                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                        <Icon name="mail" className="text-indigo-600" /> Need Further Support?
-                                    </h3>
-                                    <p className="opacity-70 mb-6 text-sm">Contact the Glow Engagement Team to discuss your results and implementation plans.</p>
+                                <div className="bg-white p-8 rounded-2xl border border-slate-200 no-print">
+                                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2">Need Further Support?</h3>
+                                    <p className="opacity-70 mb-6 text-sm">Email the Glow Engagement Team directly to discuss these results.</p>
                                     <form onSubmit={handleEmail} className="space-y-4">
-                                        <div className="flex flex-col gap-1">
-                                            <label className="text-xs font-bold uppercase opacity-50">Message</label>
-                                            <textarea className="w-full p-4 border rounded-xl outline-none focus:ring-2 focus:ring-indigo-500 h-32" placeholder="Tell us more about your specific needs..." value={contactForm.message} onChange={e => setContactForm({...contactForm, message: e.target.value})} required />
-                                        </div>
-                                        <button type="submit" className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg">
-                                            Email Education Scotland
-                                        </button>
+                                        <textarea className="w-full p-4 border rounded-xl h-32" value={contactMessage} onChange={e => setContactMessage(e.target.value)} placeholder="Message..." required />
+                                        <button type="submit" className="bg-indigo-600 text-white px-8 py-3 rounded-xl font-bold">Email Education Scotland</button>
                                     </form>
                                 </div>
                             </div>
@@ -388,22 +319,8 @@
             );
         };
 
-        // Improved root rendering with error boundary
-        try {
-            const container = document.getElementById('root');
-            if (container) {
-                const root = ReactDOM.createRoot(container);
-                root.render(<App />);
-            } else {
-                console.error("Root element not found.");
-                document.getElementById('loading-state').style.display = 'none';
-                document.getElementById('error-state').style.display = 'flex';
-            }
-        } catch (err) {
-            console.error("Initialization error:", err);
-            document.getElementById('loading-state').style.display = 'none';
-            document.getElementById('error-state').style.display = 'flex';
-        }
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
     </script>
 </body>
 </html>
